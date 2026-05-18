@@ -4,8 +4,8 @@ App universitario para a UFBA.
 
 ## Pre-requisitos
 
-- Flutter 3.22+
-- Dart 3.4+
+- Flutter 3.41+
+- Dart 3.11+
 
 ### Instalando o Flutter
 
@@ -25,15 +25,48 @@ flutter doctor
 ## Como rodar
 
 ```bash
-# 1. Inicialize o projeto Flutter (primeira vez)
-flutter create . --project-name cade_ufba --org com.ufba --platforms android,ios,web
-
-# 2. Instale as dependencias
+# 1. Instale as dependencias
 flutter pub get
 
-# 3. Rode o app
+# 2. Rode o app
 flutter run
 ```
+
+## Ambiente de desenvolvimento (Docker + Supabase)
+
+Pre-requisitos adicionais: Docker, Docker Compose e [Supabase CLI](https://supabase.com/docs/guides/cli) (`brew install supabase/tap/supabase`).
+
+```bash
+# 1. Copie o template de variaveis e preencha SUPABASE_ANON_KEY
+cp .env.desenvolvimento.example .env.desenvolvimento
+# (pegue a anon key da saida de `supabase start`)
+
+# 2. Suba tudo
+make up          # supabase start + container Flutter ocioso
+
+# 4. Comandos do dia-a-dia
+make pub-get     # instala dependencias dentro do container
+make gen         # roda build_runner (freezed/json_serializable)
+make test        # roda flutter test
+make web         # roda o app em http://localhost:8080
+make down        # encerra tudo
+```
+
+O arquivo `.env.desenvolvimento` e ignorado pelo git. Para mobile/emulador, prefira rodar o Flutter no host apontando para o Supabase local (veja `CLAUDE.md` para detalhes de conectividade `host.docker.internal` / `10.0.2.2`).
+
+### Migrations Supabase
+
+```bash
+supabase migration new create_events_table   # gera arquivo SQL em supabase/migrations/
+supabase db reset                             # aplica todas as migrations do zero
+```
+
+### Arquivos relevantes
+
+- `docker-compose.yml` — servico `flutter` ocioso, comandos via `docker compose exec`.
+- `docker/flutter.Dockerfile` — `dart:3.4-sdk` + Flutter 3.22.0.
+- `Makefile` — atalhos para o fluxo acima.
+- `.env.desenvolvimento.example` — template do ambiente de desenvolvimento.
 
 ## Estrutura do projeto
 

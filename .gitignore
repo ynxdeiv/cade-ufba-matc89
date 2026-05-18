@@ -1,0 +1,24 @@
+# Ambiente
+.env
+.env.*
+!.env.*.example
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Supabase
+supabase/.branches/
+supabase/.temp/

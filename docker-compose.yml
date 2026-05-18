@@ -1,0 +1,22 @@
+services:
+  flutter:
+    build:
+      context: .
+      dockerfile: docker/flutter.Dockerfile
+    image: cade-ufba/flutter:dev
+    working_dir: /app
+    env_file:
+      - .env.desenvolvimento
+    volumes:
+      - .:/app
+      - flutter-pub-cache:/root/.pub-cache
+      - flutter-build:/app/build
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: tail -f /dev/null
+
+volumes:
+  flutter-pub-cache:
+  flutter-build:
