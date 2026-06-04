@@ -136,3 +136,7 @@ feature/
 | dartz | Tipos funcionais (Either) |
 | equatable | Comparacao de objetos |
 | freezed | Geracao de codigo imutavel |
+
+## Decisoes de arquitetura (ADRs)
+
+- [0001 — Fonte de dados de eventos no MVP](docs/decisoes/0001-fonte-de-eventos.md): por que o MVP usa seed manual via SQL + tabela `event_managers` em vez de scraping ou painel admin.
