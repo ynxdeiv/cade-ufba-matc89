@@ -1,0 +1,241 @@
+-- BE-005: seed manual de eventos para o MVP do Cadê UFBA.
+-- Decisão documentada em docs/decisoes/0001-fonte-de-eventos.md.
+--
+-- Janela: a partir de current_date - 7 dias até current_date + 60 dias.
+-- Cobertura: 5 categorias (palestra, minicurso, congresso, defesa,
+-- cultural) e 8+ unidades da UFBA.
+
+insert into public.events (
+  titulo, descricao, inicio, fim, local, responsavel,
+  carga_horaria, tem_certificado, categoria, unidade,
+  capacidade, link_externo
+) values
+-- ====================== PALESTRAS ======================
+('Palestra: IA Aplicada à Saúde Pública',
+ 'Discussão sobre uso de modelos de linguagem em diagnóstico assistido por computador, com foco em saúde pública na Bahia.',
+ current_date + interval '3 days' + time '14:00',
+ current_date + interval '3 days' + time '16:00',
+ 'Auditório do PAF I', 'Profa. Ana Lima',
+ interval '2 hours', true, 'palestra', 'IME', 120, null),
+
+('Palestra: Computação Quântica para Iniciantes',
+ 'Introdução acessível aos princípios de qubits, superposição e algoritmos de Shor e Grover.',
+ current_date + interval '10 days' + time '10:00',
+ current_date + interval '10 days' + time '12:00',
+ 'Auditório IC', 'Prof. Carlos Mendes',
+ interval '2 hours', true, 'palestra', 'IC', 80, null),
+
+('Palestra: Engenharia de Software em Startups Brasileiras',
+ 'Painel com fundadores e CTOs de startups baianas sobre cultura, contratação e arquitetura inicial.',
+ current_date + interval '17 days' + time '19:00',
+ current_date + interval '17 days' + time '21:00',
+ 'Reitoria — Salão Nobre', 'Coordenação de Empreendedorismo',
+ interval '2 hours', false, 'palestra', 'Reitoria', 200, 'https://ufba.br/eventos/se-startups'),
+
+('Palestra: Educação Antirracista nas Universidades',
+ 'Mesa-redonda sobre políticas afirmativas, currículo decolonial e práticas docentes.',
+ current_date + interval '24 days' + time '14:30',
+ current_date + interval '24 days' + time '17:00',
+ 'Auditório FACED', 'Profa. Mariana Souza',
+ interval '2 hours 30 minutes', true, 'palestra', 'FACED', 150, null),
+
+('Palestra: Mudanças Climáticas e o Semiárido',
+ 'Estudos do Instituto de Geociências sobre o impacto das mudanças climáticas no semiárido baiano.',
+ current_date + interval '31 days' + time '09:00',
+ current_date + interval '31 days' + time '11:00',
+ 'Auditório do IGEO', 'Prof. Felipe Andrade',
+ interval '2 hours', true, 'palestra', 'IGEO', 100, null),
+
+('Palestra: Tópicos em Bioética',
+ 'Discussão sobre dilemas éticos em pesquisa biomédica e edição genética.',
+ current_date + interval '38 days' + time '15:00',
+ current_date + interval '38 days' + time '17:00',
+ 'Auditório do ICS', 'Profa. Beatriz Rocha',
+ interval '2 hours', true, 'palestra', 'ICS', 90, null),
+
+('Palestra: Arquitetura Moderna e Patrimônio em Salvador',
+ 'Diálogo entre arquitetura contemporânea e preservação histórica no centro de Salvador.',
+ current_date + interval '45 days' + time '14:00',
+ current_date + interval '45 days' + time '16:00',
+ 'Auditório FAUFBA', 'Prof. Lucas Pereira',
+ interval '2 hours', false, 'palestra', 'FAUFBA', 120, null),
+
+-- (palestra retroativa para o ícone "ontem" no calendário)
+('Palestra: Acessibilidade Digital em Aplicações Públicas',
+ 'Diretrizes WCAG aplicadas a portais governamentais brasileiros.',
+ current_date - interval '5 days' + time '10:00',
+ current_date - interval '5 days' + time '12:00',
+ 'Sala 401, IC', 'Prof. Rafael Cunha',
+ interval '2 hours', true, 'palestra', 'IC', 60, null),
+
+-- ====================== MINICURSOS ======================
+('Minicurso: Introdução ao Flutter',
+ 'Aulas práticas de criação de app multiplataforma com Flutter e Dart, indo do hello-world até consumo de APIs.',
+ current_date + interval '5 days' + time '08:30',
+ current_date + interval '7 days' + time '12:30',
+ 'LabPrograma — IC', 'Profa. Larissa Dias',
+ interval '12 hours', true, 'minicurso', 'IC', 30, 'https://ufba.br/eventos/flutter-mini'),
+
+('Minicurso: Postgres Avançado',
+ 'Explora índices, planos de execução, particionamento e otimização para cargas mistas OLTP/OLAP.',
+ current_date + interval '12 days' + time '09:00',
+ current_date + interval '14 days' + time '12:00',
+ 'Sala de Servidores — IME', 'Prof. Jorge Almeida',
+ interval '9 hours', true, 'minicurso', 'IME', 25, null),
+
+('Minicurso: Redação Acadêmica em Inglês',
+ 'Estratégias de estruturação de artigos científicos e ferramentas de revisão por pares.',
+ current_date + interval '19 days' + time '14:00',
+ current_date + interval '21 days' + time '17:00',
+ 'Sala 12 — Letras', 'Profa. Elena Costa',
+ interval '9 hours', true, 'minicurso', 'Instituto de Letras', 25, null),
+
+('Minicurso: Pesquisa Qualitativa em Educação',
+ 'Métodos de coleta e análise qualitativa para pesquisadores iniciantes em educação.',
+ current_date + interval '26 days' + time '08:00',
+ current_date + interval '28 days' + time '12:00',
+ 'Sala 305 — FACED', 'Prof. Diego Martins',
+ interval '12 hours', true, 'minicurso', 'FACED', 30, null),
+
+('Minicurso: Modelagem 3D com Blender',
+ 'Do modelo low-poly à exportação para games e impressão 3D.',
+ current_date + interval '33 days' + time '13:30',
+ current_date + interval '35 days' + time '17:30',
+ 'LabDesign — IHAC', 'Prof. Tiago Ramos',
+ interval '12 hours', true, 'minicurso', 'IHAC', 20, null),
+
+('Minicurso: Estatística para Ciências Humanas com R',
+ 'Análises descritivas, regressão e visualização com R/RStudio em problemas das ciências humanas.',
+ current_date + interval '40 days' + time '14:00',
+ current_date + interval '42 days' + time '18:00',
+ 'LabEstatística — IME', 'Profa. Helena Vieira',
+ interval '12 hours', true, 'minicurso', 'IME', 25, null),
+
+('Minicurso: Direito Digital e LGPD',
+ 'Implicações práticas da LGPD para aplicações web e mobile, com estudos de caso.',
+ current_date + interval '47 days' + time '09:00',
+ current_date + interval '48 days' + time '13:00',
+ 'Sala 201 — FDUFBA', 'Profa. Camila Brito',
+ interval '8 hours', true, 'minicurso', 'FDUFBA', 35, null),
+
+-- ====================== CONGRESSOS / SEMINÁRIOS ======================
+('Congresso de Computação da UFBA — CCUFBA 2026',
+ 'Encontro anual reunindo trilhas de pesquisa, indústria e graduação. Inclui hackathon paralelo.',
+ current_date + interval '20 days' + time '08:00',
+ current_date + interval '22 days' + time '18:00',
+ 'PAF I — Salão de Eventos', 'Comissão Organizadora CCUFBA',
+ interval '24 hours', true, 'congresso', 'IC', 400, 'https://ufba.br/eventos/ccufba-2026'),
+
+('Seminário Integrado de Pesquisa em Saúde',
+ 'Apresentação dos projetos de pesquisa em andamento no ICS, com sessões de pôsteres.',
+ current_date + interval '27 days' + time '08:00',
+ current_date + interval '29 days' + time '17:00',
+ 'Auditório ICS', 'Comissão de Pesquisa ICS',
+ interval '20 hours', true, 'congresso', 'ICS', 250, null),
+
+('Encontro de Engenharias da Bahia',
+ 'Reúne engenharias civil, elétrica, mecânica e química com palestras, mostra de TCCs e minicursos.',
+ current_date + interval '34 days' + time '08:00',
+ current_date + interval '36 days' + time '18:00',
+ 'Escola Politécnica — Auditório principal', 'Comissão EEB',
+ interval '24 hours', true, 'congresso', 'Escola Politécnica', 350, 'https://ufba.br/eventos/eeb'),
+
+('Semana Acadêmica de Letras',
+ 'Eventos culturais, mesas-redondas e oficinas envolvendo todos os cursos de Letras.',
+ current_date + interval '50 days' + time '08:30',
+ current_date + interval '54 days' + time '20:00',
+ 'Instituto de Letras', 'Diretório Acadêmico de Letras',
+ interval '32 hours', false, 'congresso', 'Instituto de Letras', 300, null),
+
+('Encontro Baiano de Educação Matemática',
+ 'Encontro estadual com pesquisadores e professores da educação básica em matemática.',
+ current_date + interval '57 days' + time '08:00',
+ current_date + interval '59 days' + time '17:00',
+ 'Auditório FACED', 'Comissão EBEM',
+ interval '24 hours', true, 'congresso', 'FACED', 200, null),
+
+-- ====================== DEFESAS ======================
+('Defesa de Mestrado: Modelos de difusão em imagens médicas',
+ 'Defesa pública da dissertação do PPGM (UFBA) sobre aplicação de modelos de difusão em radiologia.',
+ current_date + interval '2 days' + time '14:00',
+ current_date + interval '2 days' + time '16:30',
+ 'Sala 305 — IME', 'Comissão PPGM',
+ interval '2 hours 30 minutes', false, 'defesa', 'IME', 40, null),
+
+('Defesa de Tese: Identidades nordestinas em obras audiovisuais',
+ 'Defesa pública da tese do PPGAV sobre a construção de identidades regionais em produções audiovisuais brasileiras.',
+ current_date + interval '9 days' + time '09:00',
+ current_date + interval '9 days' + time '12:00',
+ 'Auditório IHAC', 'Comissão PPGAV',
+ interval '3 hours', false, 'defesa', 'IHAC', 50, null),
+
+('Defesa de Mestrado: Compiladores para arquiteturas RISC-V',
+ 'Defesa pública do PPGCC sobre compiladores otimizados para RISC-V embarcados.',
+ current_date + interval '16 days' + time '14:00',
+ current_date + interval '16 days' + time '17:00',
+ 'Auditório IC', 'Comissão PPGCC',
+ interval '3 hours', false, 'defesa', 'IC', 40, null),
+
+('Defesa de Tese: Bioremediação em águas costeiras',
+ 'Defesa pública do PPGEO sobre estratégias de bioremediação em estuários da Bahia.',
+ current_date + interval '23 days' + time '10:00',
+ current_date + interval '23 days' + time '13:00',
+ 'Auditório IGEO', 'Comissão PPGEO',
+ interval '3 hours', false, 'defesa', 'IGEO', 35, null),
+
+('Defesa de Mestrado: Saúde mental em estudantes universitários',
+ 'Defesa pública do PPGPSI sobre indicadores de saúde mental em discentes da UFBA durante a graduação.',
+ current_date + interval '30 days' + time '15:00',
+ current_date + interval '30 days' + time '18:00',
+ 'Sala 102 — IPS', 'Comissão PPGPSI',
+ interval '3 hours', false, 'defesa', 'IPS', 40, null),
+
+('Defesa de Tese: Acessibilidade urbana em Salvador',
+ 'Defesa pública do PPGAU sobre acessibilidade no transporte público e calçadas do centro histórico.',
+ current_date + interval '44 days' + time '09:00',
+ current_date + interval '44 days' + time '12:00',
+ 'Auditório FAUFBA', 'Comissão PPGAU',
+ interval '3 hours', false, 'defesa', 'FAUFBA', 45, null),
+
+-- ====================== EVENTOS CULTURAIS ======================
+('Recital de Música Brasileira Contemporânea',
+ 'Performances dos alunos da Escola de Música com obras brasileiras dos séculos XX e XXI.',
+ current_date - interval '2 days' + time '19:00',
+ current_date - interval '2 days' + time '21:30',
+ 'Teatro Vila Velha', 'Escola de Música UFBA',
+ interval '2 hours 30 minutes', false, 'cultural', 'Escola de Música', 250, null),
+
+('Mostra de Arte: Diáspora e Memória',
+ 'Exposição coletiva organizada por discentes do IHAC sobre identidade negra e diáspora.',
+ current_date + interval '6 days' + time '10:00',
+ current_date + interval '13 days' + time '18:00',
+ 'Galeria IHAC', 'IHAC — Núcleo de Artes Visuais',
+ interval '8 hours', false, 'cultural', 'IHAC', 500, null),
+
+('Sarau de Poesia: Vozes Periféricas',
+ 'Sarau aberto com poetas convidados e microfone livre, em parceria com coletivos da cidade.',
+ current_date + interval '15 days' + time '19:30',
+ current_date + interval '15 days' + time '22:00',
+ 'Praça Universitária — Ondina', 'Coletivo Vozes',
+ interval '2 hours 30 minutes', false, 'cultural', 'Instituto de Letras', 200, null),
+
+('Festival de Cinema Universitário UFBA',
+ 'Mostra competitiva e não competitiva de curtas produzidos por estudantes da UFBA.',
+ current_date + interval '36 days' + time '18:00',
+ current_date + interval '38 days' + time '22:00',
+ 'Cinema da UFBA', 'Comissão FCUF',
+ interval '12 hours', false, 'cultural', 'IHAC', 350, 'https://ufba.br/eventos/fcuf-2026'),
+
+('Roda de Capoeira na Reitoria',
+ 'Roda aberta promovida pelo grupo cultural da UFBA, com mestres convidados.',
+ current_date + interval '42 days' + time '17:00',
+ current_date + interval '42 days' + time '20:00',
+ 'Pátio da Reitoria', 'Grupo Cultural UFBA',
+ interval '3 hours', false, 'cultural', 'Reitoria', 300, null),
+
+('Noite de Jazz e Improvisação',
+ 'Apresentação do grupo experimental de jazz da Escola de Música.',
+ current_date + interval '53 days' + time '20:00',
+ current_date + interval '53 days' + time '22:30',
+ 'Teatro Castro Alves — Sala 2', 'Escola de Música UFBA',
+ interval '2 hours 30 minutes', false, 'cultural', 'Escola de Música', 280, null);
