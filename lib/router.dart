@@ -11,7 +11,7 @@ import 'features/auth/presentation/screens/cadastro_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/recuperar_senha_screen.dart';
 import 'features/chat/presentation/screens/chat_screen.dart';
-import 'features/events/presentation/screens/eventos_screen.dart';
+import 'features/events/presentation/screens/lista_eventos_screen.dart';
 import 'features/profile/presentation/screens/perfil_screen.dart';
 import 'shared/widgets/home_shell.dart';
 
@@ -52,7 +52,7 @@ GoRouter buildRouter() {
         routes: [
           GoRoute(
             path: '/home/eventos',
-            builder: (_, __) => const EventosScreen(),
+            builder: (_, __) => const ListaEventosScreen(),
           ),
           GoRoute(
             path: '/home/agenda',
