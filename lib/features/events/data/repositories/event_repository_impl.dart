@@ -44,4 +44,52 @@ class EventRepositoryImpl implements EventRepository {
     final modelos = await _local.recuperarPrimeiraPagina();
     return modelos.map((m) => m.toEntity()).toList(growable: false);
   }
+
+  @override
+  Future<Either<Failure, Evento>> obter(String id) async {
+    try {
+      final m = await _remote.obter(id);
+      return Right(m.toEntity());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.mensagem));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.mensagem));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> adicionarAgenda(String eventId) async {
+    try {
+      await _remote.adicionarAgenda(eventId);
+      return const Right(null);
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.mensagem));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.mensagem));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removerAgenda(String eventId) async {
+    try {
+      await _remote.removerAgenda(eventId);
+      return const Right(null);
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.mensagem));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.mensagem));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> estaNaAgenda(String eventId) async {
+    try {
+      final esta = await _remote.estaNaAgenda(eventId);
+      return Right(esta);
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.mensagem));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.mensagem));
+    }
+  }
 }

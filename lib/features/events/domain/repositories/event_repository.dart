@@ -16,4 +16,17 @@ abstract class EventRepository {
   /// Lê apenas o cache local (sem rede). Usado pelo controller para
   /// exibir conteúdo imediato quando a rede falha.
   Future<List<Evento>> primeiraPaginaCacheada();
+
+  /// Busca um único evento por id (necessário pelo deep link
+  /// `/eventos/:id`, que pode abrir a tela sem ter carregado a lista).
+  Future<Either<Failure, Evento>> obter(String id);
+
+  /// BE-004: marca o evento na agenda do usuário autenticado.
+  Future<Either<Failure, void>> adicionarAgenda(String eventId);
+
+  /// BE-004: remove o evento da agenda do usuário autenticado.
+  Future<Either<Failure, void>> removerAgenda(String eventId);
+
+  /// Retorna true se o usuário autenticado já marcou o evento.
+  Future<Either<Failure, bool>> estaNaAgenda(String eventId);
 }

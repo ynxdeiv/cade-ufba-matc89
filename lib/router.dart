@@ -11,6 +11,7 @@ import 'features/auth/presentation/screens/cadastro_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/recuperar_senha_screen.dart';
 import 'features/chat/presentation/screens/chat_screen.dart';
+import 'features/events/presentation/screens/detalhe_evento_screen.dart';
 import 'features/events/presentation/screens/lista_eventos_screen.dart';
 import 'features/profile/presentation/screens/perfil_screen.dart';
 import 'shared/widgets/home_shell.dart';
@@ -66,6 +67,11 @@ GoRouter buildRouter() {
         ],
       ),
       GoRoute(path: '/home', redirect: (_, __) => '/home/eventos'),
+      GoRoute(
+        path: '/eventos/:id',
+        builder: (_, state) =>
+            DetalheEventoScreen(eventoId: state.pathParameters['id']!),
+      ),
     ],
   );
 }
