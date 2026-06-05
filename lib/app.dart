@@ -15,9 +15,9 @@ class CadeUfbaApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Cadê UFBA',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      darkTheme: AppTheme.light,
       routerConfig: ref.watch(_routerProvider),
     );
   }

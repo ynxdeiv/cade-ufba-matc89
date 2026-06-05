@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../shared/theme/app_theme.dart';
@@ -173,7 +174,13 @@ class _ListaEventosScreenState extends ConsumerState<ListaEventosScreen> {
     return [
       SliverList.builder(
         itemCount: s.eventos.length,
-        itemBuilder: (_, i) => CardEvento(evento: s.eventos[i]),
+        itemBuilder: (context, i) {
+          final evento = s.eventos[i];
+          return CardEvento(
+            evento: evento,
+            onTap: () => context.push('/eventos/${evento.id}'),
+          );
+        },
       ),
       SliverToBoxAdapter(
         child: Padding(

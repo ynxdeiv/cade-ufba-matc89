@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../shared/theme/app_theme.dart';
 import '../../domain/entities/evento.dart';
+import '../screens/detalhe_evento_screen.dart' show heroTagEvento;
 
 class CardEvento extends StatelessWidget {
   const CardEvento({super.key, required this.evento, this.onTap});
@@ -24,7 +25,12 @@ class CardEvento extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _BadgeData(quando: evento.inicio),
+                  Hero(
+                    tag: heroTagEvento(evento.id),
+                    flightShuttleBuilder: (_, __, ___, ____, _____) =>
+                        _BadgeData(quando: evento.inicio),
+                    child: _BadgeData(quando: evento.inicio),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

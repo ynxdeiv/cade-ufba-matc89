@@ -47,4 +47,66 @@ class EventRemoteDatasource {
       throw const NetworkException('Falha de conexão');
     }
   }
+
+  Future<EventoModel> obter(String id) async {
+    try {
+      final res = await _client
+          .from('events')
+          .select()
+          .eq('id', id)
+          .maybeSingle();
+      if (res == null) {
+        throw const ServerException('Evento não encontrado');
+      }
+      return EventoModel.fromJson(Map<String, dynamic>.from(res));
+    } on sb.PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } on TimeoutException {
+      throw const NetworkException('Tempo esgotado');
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) rethrow;
+      throw const NetworkException('Falha de conexão');
+    }
+  }
+
+  Future<void> adicionarAgenda(String eventId) async {
+    try {
+      await _client.rpc('adicionar_a_agenda', params: {'p_event_id': eventId});
+    } on sb.PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } on TimeoutException {
+      throw const NetworkException('Tempo esgotado');
+    } catch (_) {
+      throw const NetworkException('Falha de conexão');
+    }
+  }
+
+  Future<void> removerAgenda(String eventId) async {
+    try {
+      await _client.rpc('remover_da_agenda', params: {'p_event_id': eventId});
+    } on sb.PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } on TimeoutException {
+      throw const NetworkException('Tempo esgotado');
+    } catch (_) {
+      throw const NetworkException('Falha de conexão');
+    }
+  }
+
+  Future<bool> estaNaAgenda(String eventId) async {
+    try {
+      final res = await _client
+          .from('user_events')
+          .select('event_id')
+          .eq('event_id', eventId)
+          .limit(1);
+      return (res as List).isNotEmpty;
+    } on sb.PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } on TimeoutException {
+      throw const NetworkException('Tempo esgotado');
+    } catch (_) {
+      throw const NetworkException('Falha de conexão');
+    }
+  }
 }
