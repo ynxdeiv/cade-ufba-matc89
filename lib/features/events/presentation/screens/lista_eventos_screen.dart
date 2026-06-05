@@ -58,7 +58,7 @@ class _ListaEventosScreenState extends ConsumerState<ListaEventosScreen> {
     final controller = ref.read(eventListControllerProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppCores.cinzaFundo,
+      backgroundColor: AppCores.neutro100,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: controller.carregarPrimeiraPagina,
@@ -68,7 +68,7 @@ class _ListaEventosScreenState extends ConsumerState<ListaEventosScreen> {
               SliverAppBar(
                 pinned: true,
                 floating: true,
-                backgroundColor: AppCores.azulNavy,
+                backgroundColor: AppCores.azul900,
                 expandedHeight: 132,
                 title: const Text(
                   'Eventos',
@@ -93,12 +93,17 @@ class _ListaEventosScreenState extends ConsumerState<ListaEventosScreen> {
                         controller: _busca,
                         textInputAction: TextInputAction.search,
                         onChanged: controller.atualizarBusca,
-                        style: const TextStyle(color: AppCores.azulNavy),
+                        style: const TextStyle(color: AppCores.neutro900),
                         decoration: InputDecoration(
                           hintText: 'Buscar eventos...',
-                          prefixIcon: const Icon(Icons.search),
+                          hintStyle:
+                              const TextStyle(color: AppCores.neutro500),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppCores.neutro500,
+                          ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: AppCores.neutro0,
                           contentPadding: EdgeInsets.zero,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
@@ -158,7 +163,7 @@ class _ListaEventosScreenState extends ConsumerState<ListaEventosScreen> {
           child: Center(
             child: Text(
               'Nenhum evento encontrado.',
-              style: TextStyle(color: AppCores.cinzaTexto),
+              style: TextStyle(color: AppCores.neutro500),
             ),
           ),
         ),
@@ -178,7 +183,7 @@ class _ListaEventosScreenState extends ConsumerState<ListaEventosScreen> {
                 ? const CircularProgressIndicator()
                 : Text(
                     s.fim ? 'Fim da lista' : '',
-                    style: const TextStyle(color: AppCores.cinzaTexto),
+                    style: const TextStyle(color: AppCores.neutro500),
                   ),
           ),
         ),
@@ -203,16 +208,16 @@ class _BannerOffline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppCores.azulCeu.withValues(alpha: 0.15),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: AppCores.azul50,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: const [
-          Icon(Icons.cloud_off, size: 16, color: AppCores.azulNavy),
+          Icon(Icons.cloud_off, size: 16, color: AppCores.azul700),
           SizedBox(width: 8),
           Expanded(
             child: Text(
               'Você está vendo eventos salvos (sem conexão).',
-              style: TextStyle(color: AppCores.azulNavy, fontSize: 12),
+              style: TextStyle(color: AppCores.azul700, fontSize: 12),
             ),
           ),
         ],

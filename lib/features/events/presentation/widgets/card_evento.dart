@@ -37,7 +37,7 @@ class CardEvento extends StatelessWidget {
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 16,
-                            color: AppCores.azulNavy,
+                            color: AppCores.neutro900,
                           ),
                         ),
                         if (evento.unidade != null) ...[
@@ -45,7 +45,7 @@ class CardEvento extends StatelessWidget {
                           Text(
                             evento.unidade!,
                             style: const TextStyle(
-                              color: AppCores.cinzaTexto,
+                              color: AppCores.neutro500,
                               fontSize: 12,
                             ),
                           ),
@@ -61,7 +61,10 @@ class CardEvento extends StatelessWidget {
                   evento.descricao!,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppCores.cinzaTexto, fontSize: 13),
+                  style: const TextStyle(
+                    color: AppCores.neutro700,
+                    fontSize: 13,
+                  ),
                 ),
               ],
               const SizedBox(height: 12),
@@ -106,7 +109,7 @@ class _BadgeData extends StatelessWidget {
       width: 54,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: AppCores.azulNavy,
+        color: AppCores.azul500,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -146,11 +149,11 @@ class _Meta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icone, size: 14, color: AppCores.cinzaTexto),
+        Icon(icone, size: 14, color: AppCores.neutro700),
         const SizedBox(width: 4),
         Text(
           texto,
-          style: const TextStyle(color: AppCores.cinzaTexto, fontSize: 12),
+          style: const TextStyle(color: AppCores.neutro700, fontSize: 12),
         ),
       ],
     );
