@@ -71,6 +71,14 @@ class _ListaEventosScreenState extends ConsumerState<ListaEventosScreen> {
                 floating: true,
                 backgroundColor: AppCores.azul900,
                 expandedHeight: 132,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Image.asset(
+                    'assets/images/ufba_logo.png',
+                    fit: BoxFit.contain,
+                    semanticLabel: 'Brasão da UFBA',
+                  ),
+                ),
                 title: const Text(
                   'Eventos',
                   style: TextStyle(

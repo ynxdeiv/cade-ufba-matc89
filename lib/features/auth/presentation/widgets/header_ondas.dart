@@ -15,8 +15,23 @@ class HeaderOndas extends StatelessWidget {
     return SizedBox(
       height: altura,
       width: double.infinity,
-      child: CustomPaint(
-        painter: _OndasPainter(),
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          CustomPaint(
+            size: Size.infinite,
+            painter: _OndasPainter(),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: altura * 0.12),
+            child: Image.asset(
+              'assets/images/ufba_logo.png',
+              height: altura * 0.55,
+              fit: BoxFit.contain,
+              semanticLabel: 'Brasão da UFBA',
+            ),
+          ),
+        ],
       ),
     );
   }
