@@ -18,7 +18,8 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, Usuario>> login(String email, String senha) async {
     try {
       final m = await _remote.entrar(email: email, senha: senha);
-      return Right(m.toEntity());
+      final hidratado = await _remote.hidratarComProfile(m);
+      return Right(hidratado.toEntity());
     } on core.AuthException catch (e) {
       return Left(AuthFailure(e.mensagem));
     } on core.NetworkException catch (e) {
@@ -70,10 +71,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<Usuario?> sessionStream() async* {
-    yield _remote.sessaoAtual()?.toEntity();
+    final atual = _remote.sessaoAtual();
+    if (atual == null) {
+      yield null;
+    } else {
+      final hidratado = await _remote.hidratarComProfile(atual);
+      yield hidratado.toEntity();
+    }
     await for (final ev in _remote.onAuthStateChange()) {
       final user = ev.session?.user;
-      yield user == null ? null : UsuarioModel.deSbUser(user).toEntity();
+      if (user == null) {
+        yield null;
+      } else {
+        final base = UsuarioModel.deSbUser(user);
+        final hidratado = await _remote.hidratarComProfile(base);
+        yield hidratado.toEntity();
+      }
     }
   }
 }

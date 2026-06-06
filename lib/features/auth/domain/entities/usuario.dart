@@ -9,5 +9,7 @@ class Usuario with _$Usuario {
     required String email,
     String? nome,
     String? vinculo,
+    String? cursoDepartamento,
+    String? fotoUrl,
   }) = _Usuario;
 }

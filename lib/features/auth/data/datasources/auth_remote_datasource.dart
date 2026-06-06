@@ -83,6 +83,25 @@ class AuthRemoteDatasource {
     return user == null ? null : UsuarioModel.deSbUser(user);
   }
 
+  /// Lê a linha de `public.profiles` do usuário e mescla com os dados do
+  /// `auth.users`. Se o profile ainda não foi criado (trigger pode estar
+  /// em propagação), devolve o modelo original sem falhar.
+  Future<UsuarioModel> hidratarComProfile(UsuarioModel base) async {
+    try {
+      final row = await _client
+          .from('profiles')
+          .select('nome, vinculo, curso_departamento, foto_url')
+          .eq('id', base.id)
+          .maybeSingle();
+      if (row == null) return base;
+      return base.mesclarComProfile(row);
+    } on sb.PostgrestException {
+      return base;
+    } catch (_) {
+      return base;
+    }
+  }
+
   /// Mensagens internas do Supabase em pt-BR. Mantemos genérica em login
   /// para não revelar se o problema foi email ou senha.
   String _mensagemAmigavel(sb.AuthException e) {
