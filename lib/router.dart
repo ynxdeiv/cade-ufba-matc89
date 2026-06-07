@@ -59,7 +59,12 @@ GoRouter buildRouter() {
             path: '/home/agenda',
             builder: (_, __) => const AgendaScreen(),
           ),
-          GoRoute(path: '/home/chat', builder: (_, __) => const ChatScreen()),
+          GoRoute(
+            path: '/home/chat',
+            builder: (_, state) => ChatScreen(
+              conversaId: state.uri.queryParameters['conversa'],
+            ),
+          ),
           GoRoute(
             path: '/home/perfil',
             builder: (_, __) => const PerfilScreen(),

@@ -109,6 +109,15 @@ class AuthController extends StateNotifier<AuthState> {
 
   void limpar() => state = const AuthState.idle();
 
+  /// Substitui o usuário do estado atual quando outra feature (perfil)
+  /// edita os dados, para que o restante do app reflita as alterações
+  /// sem precisar de novo login.
+  void atualizarUsuario(Usuario novo) {
+    if (state is Autenticado) {
+      state = AuthState.autenticado(novo);
+    }
+  }
+
   String _msgFalha(Failure f) {
     if (f is ValidationFailure) return f.mensagem ?? 'Campo inválido';
     if (f is AuthFailure) return f.mensagem ?? 'Email ou senha inválidos';
