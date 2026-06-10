@@ -9,6 +9,7 @@ App universitário para a UFBA — eventos, agenda e chatbot com IA (Cadu).
 | Flutter + Dart | 3.41+ / 3.11+ |
 | Docker + Docker Compose | qualquer recente |
 | Supabase CLI | qualquer recente |
+| Deno (Edge Function do chatbot) | 1.40+ |
 
 ### Instalando o Flutter
 
@@ -58,6 +59,19 @@ curl -fsSL https://raw.githubusercontent.com/supabase/cli/main/scripts/install.s
 
 Em todos os sistemas: [docs.docker.com/get-docker](https://docs.docker.com/get-docker/)
 
+### Instalando o Deno
+
+Necessário para rodar a Edge Function `cadu-chat` localmente.
+
+```bash
+# macOS / Linux
+curl -fsSL https://deno.land/install.sh | sh
+# macOS (Homebrew): brew install deno
+
+# Windows (PowerShell)
+irm https://deno.land/install.ps1 | iex
+```
+
 ---
 
 ## Primeira vez na máquina (setup completo)
@@ -81,20 +95,22 @@ supabase start
 #      service_role key: eyJhb...
 
 # 4. Preencha o .env.desenvolvimento com as chaves acima
-#    SUPABASE_URL=http://localhost:54321     (já pré-preenchido)
+#    SUPABASE_URL=http://host.docker.internal:54321     (já pré-preenchido)
 #    SUPABASE_ANON_KEY=<anon key acima>
-#    ANTHROPIC_API_KEY=<sua chave em console.anthropic.com>
 #    SUPABASE_SERVICE_ROLE_KEY=<service_role key acima>  ← usada pela Edge Function
+#    GEMINI_API_KEY=<sua chave em aistudio.google.com/apikey>  ← chatbot Cadu
 
 # 5. Aplique as migrations e o seed de eventos
 supabase db reset
 #    Cria todas as tabelas, políticas RLS, funções RPC e insere eventos de teste.
-
-# 6. Configure os segredos da Edge Function (local)
-supabase secrets set --env-file .env.desenvolvimento
 ```
 
-Pronto — o banco está populado e os segredos estão disponíveis para a Edge Function.
+Pronto — o banco está populado. Para o chatbot, a Edge Function recebe as variáveis
+do `.env.desenvolvimento` quando você a roda via `deno run` (veja "Como rodar").
+
+> ⚠️ **NÃO** rode `supabase secrets set` no desenvolvimento local — esse comando
+> configura segredos do projeto **remoto (nuvem)** e exige `supabase login`.
+> Veja [Solução de problemas](#solução-de-problemas).
 
 ---
 
@@ -109,11 +125,29 @@ make web          # abre o app em http://localhost:8080
 make down         # encerra tudo
 ```
 
-Para rodar a Edge Function `cadu-chat` localmente em paralelo:
+Para o chatbot funcionar, rode a Edge Function `cadu-chat` em **outro terminal**, na
+porta `8000` (é o `FUNCTIONS_URL` que o `make web` usa). Requer [Deno](https://deno.com) instalado:
+
 ```bash
-supabase functions serve cadu-chat --env-file .env.desenvolvimento
-# Edge Function disponível em http://localhost:54321/functions/v1/cadu-chat
+# macOS / Linux
+set -a; source .env.desenvolvimento; set +a
+SUPABASE_URL=http://127.0.0.1:54321 \
+  deno run --allow-net --allow-env --allow-read supabase/functions/cadu-chat/index.ts
+# Edge Function disponível em http://localhost:8000/cadu-chat
 ```
+
+```powershell
+# Windows (PowerShell)
+Get-Content .env.desenvolvimento | Where-Object { $_ -match '^\s*[^#].*=' } | ForEach-Object {
+  $name, $value = $_ -split '=', 2
+  Set-Item "env:$($name.Trim())" $value.Trim()
+}
+$env:SUPABASE_URL = "http://127.0.0.1:54321"
+deno run --allow-net --allow-env --allow-read supabase/functions/cadu-chat/index.ts
+```
+
+> Reinicie esse processo sempre que editar a função (`gemini.ts`, `system_prompt.ts`) ou o `.env.desenvolvimento`.
+> Evite `supabase functions serve` no macOS/Apple Silicon — o edge-runtime costuma dar *Segmentation fault* (veja [Solução de problemas](#solução-de-problemas)).
 
 ### Opção B — Mobile/Emulador no host (Android/iOS)
 
@@ -141,9 +175,10 @@ make flutter-shell  # abre bash no container Flutter
 supabase migration new nome_da_migration   # cria arquivo SQL em supabase/migrations/
 supabase db reset                          # aplica todas as migrations do zero (destrói dados locais)
 
-# Variáveis de ambiente da Edge Function
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-supabase secrets list    # confirma os segredos configurados
+# Segredos da Edge Function NA NUVEM (deploy remoto) — exige `supabase login` + projeto linkado.
+# Para desenvolvimento LOCAL não use: a função recebe o .env ao rodar via `deno run`.
+supabase secrets set GEMINI_API_KEY=...   # só para o projeto remoto
+supabase secrets list                     # lista os segredos do projeto remoto
 
 # Modo mock (sem gastar API key) — ative no .env.desenvolvimento
 CADU_MOCK=true
@@ -160,8 +195,12 @@ Copie `.env.desenvolvimento.example` → `.env.desenvolvimento` e preencha:
 | `SUPABASE_URL` | `supabase start` → "API URL" | Sim |
 | `SUPABASE_ANON_KEY` | `supabase start` → "anon key" | Sim |
 | `SUPABASE_SERVICE_ROLE_KEY` | `supabase start` → "service_role key" | Sim (Edge Function) |
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) | Sim (chatbot real) |
+| `GEMINI_API_KEY` | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Sim (chatbot real) |
 | `CADU_MOCK` | — | Não (padrão: `false`) |
+
+> O chatbot Cadu usa o modelo **`gemini-2.5-flash-lite`** (free tier do Google AI Studio).
+> Se aparecer erro `429 / RESOURCE_EXHAUSTED (limit: 0)`, o modelo está sem quota grátis
+> no seu projeto — troque o modelo em `supabase/functions/cadu-chat/gemini.ts` ou habilite billing.
 
 > O arquivo `.env.desenvolvimento` é ignorado pelo git. Nunca comite chaves de API.
 
@@ -175,6 +214,47 @@ Copie `.env.desenvolvimento.example` → `.env.desenvolvimento` e preencha:
 | Host (Flutter no host) | `http://localhost:54321` |
 | Android Emulator | `http://10.0.2.2:54321` |
 | iOS Simulator / dispositivo Wi-Fi | IP da máquina (ex: `http://192.168.x.x:54321`) |
+
+---
+
+## Solução de problemas
+
+### `supabase secrets set` pede access token ou seleção de projeto
+
+Ao rodar `supabase secrets set --env-file .env.desenvolvimento` você pode ver:
+
+```
+Access token not provided. Supply an access token by running `supabase login`
+or setting the SUPABASE_ACCESS_TOKEN environment variable.
+```
+
+e, depois de `supabase login`, o comando para em:
+
+```
+Select a project:
+> nome-do-projeto (org: ..., region: ...)
+```
+
+**Causa:** `supabase secrets set` gerencia segredos do projeto **remoto (na nuvem)** —
+por isso exige `supabase login` e um projeto linkado/selecionado.
+
+**Solução:** no desenvolvimento **local você não precisa desse comando**. A Edge Function
+recebe as variáveis do `.env.desenvolvimento` quando você a roda via `deno run` (veja
+[Como rodar](#como-rodar-dia-a-dia)). Só use `supabase secrets set` para **deploy na nuvem**.
+
+### `supabase functions serve` dá *Segmentation fault* (exit 139)
+
+No macOS/Apple Silicon o container do edge-runtime do `supabase functions serve`
+costuma crashar com `Segmentation fault`. **Solução:** rode a função direto com
+`deno run` na porta `8000` (veja [Como rodar](#como-rodar-dia-a-dia)) — é o caminho
+que o `make web` espera (`FUNCTIONS_URL=http://localhost:8000`).
+
+### Chatbot não responde / mensagem some ao enviar
+
+- Confirme que a Edge Function está rodando (`deno run ... index.ts`, na `:8000`) e que o `FUNCTIONS_URL` do `make web` aponta para ela.
+- `API key not valid` → a `GEMINI_API_KEY` no `.env.desenvolvimento` está errada. As chaves do Google AI Studio começam com `AQ.` (as antigas começavam com `AIzaSy`).
+- `429 RESOURCE_EXHAUSTED (limit: 0)` → o modelo está sem quota grátis no seu projeto; troque o modelo em `supabase/functions/cadu-chat/gemini.ts` (ex: `gemini-2.5-flash-lite`) ou habilite billing.
+- Após editar a função ou o `.env`, **reinicie o processo `deno run`** para recarregar.
 
 ---
 
@@ -215,7 +295,7 @@ lib/
 supabase/
 ├── migrations/                # Schema, RLS, RPCs (aplicar com supabase db reset)
 ├── functions/
-│   └── cadu-chat/             # Edge Function do chatbot (Deno + Anthropic)
+│   └── cadu-chat/             # Edge Function do chatbot (Deno + Gemini)
 ├── seed.sql                   # Eventos de teste para desenvolvimento
 └── config.toml                # Configuração do Supabase local
 ```
