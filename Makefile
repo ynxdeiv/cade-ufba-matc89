@@ -21,4 +21,8 @@ test:
 	docker compose exec flutter flutter test
 
 web:
-	docker compose exec flutter flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080
+	docker compose exec flutter bash -c 'flutter run \
+		--dart-define=SUPABASE_URL=http://localhost:54321 \
+		--dart-define=SUPABASE_ANON_KEY=$$SUPABASE_ANON_KEY \
+		--dart-define=FUNCTIONS_URL=http://localhost:8000 \
+		-d web-server --web-hostname 0.0.0.0 --web-port 8080'

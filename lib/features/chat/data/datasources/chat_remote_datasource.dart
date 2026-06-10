@@ -1,18 +1,21 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../../config/env.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../models/chat_conversation_model.dart';
 import '../models/chat_message_model.dart';
 
 class ChatRemoteDatasource {
-  ChatRemoteDatasource(this._client);
+  ChatRemoteDatasource(this._client, this._dio);
 
   final sb.SupabaseClient _client;
+  final Dio _dio;
 
-  static const _respostaStub =
-      'Em breve a IA responderá por aqui. Por enquanto, sou apenas um eco.';
+  String get _functionsUrl => Env.functionsUrl;
 
   Future<List<ChatConversationModel>> listarConversas() async {
     try {
@@ -32,9 +35,7 @@ class ChatRemoteDatasource {
 
   Future<ChatConversationModel> criarConversa() async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw const AuthException('Usuário não autenticado');
-    }
+    if (userId == null) throw const AuthException('Usuário não autenticado');
     try {
       final row = await _client
           .from('chat_conversations')
@@ -68,42 +69,71 @@ class ChatRemoteDatasource {
     }
   }
 
-  Future<List<ChatMessageModel>> enviarMensagem({
+  /// Chama a edge function `cadu-chat` e devolve os chunks de texto da resposta.
+  /// Emite cada fragmento `text` e `null` ao final (evento `done: true` — banco
+  /// já atualizado).
+  ///
+  /// Usa POST não-streaming (lê o corpo SSE inteiro de uma vez) porque
+  /// `ResponseType.stream` da Dio não é suportado no Flutter Web. Funciona em
+  /// todas as plataformas; a resposta chega de uma vez em vez de token-a-token.
+  Stream<String?> streamarMensagem({
     required String conversationId,
     required String conteudo,
-  }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw const AuthException('Usuário não autenticado');
-    }
+  }) async* {
+    final token = _client.auth.currentSession?.accessToken;
+    if (token == null) throw const AuthException('Usuário não autenticado');
+
+    late final Response<String> response;
     try {
-      final inseridas = await _client
-          .from('chat_messages')
-          .insert([
-            {
-              'user_id': userId,
-              'conversation_id': conversationId,
-              'role': 'user',
-              'conteudo': conteudo,
-            },
-            {
-              'user_id': userId,
-              'conversation_id': conversationId,
-              'role': 'assistant',
-              'conteudo': _respostaStub,
-            },
-          ])
-          .select();
-      return (inseridas as List)
-          .cast<Map<String, dynamic>>()
-          .map(ChatMessageModel.fromJson)
-          .toList(growable: false);
-    } on sb.PostgrestException catch (e) {
-      throw ServerException(e.message);
-    } on TimeoutException {
-      throw const NetworkException('Tempo esgotado');
-    } catch (_) {
-      throw const NetworkException('Falha de conexão');
+      response = await _dio.post<String>(
+        '$_functionsUrl/cadu-chat',
+        data: jsonEncode({'mensagem': conteudo, 'conversation_id': conversationId}),
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream',
+          },
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 120),
+        ),
+      );
+    } on DioException catch (e) {
+      throw ServerException(_mensagemErroDio(e));
     }
+
+    final corpo = response.data ?? '';
+    for (final line in corpo.split('\n')) {
+      if (!line.startsWith('data: ')) continue;
+      final raw = line.substring(6).trim();
+      if (raw.isEmpty || raw == '[DONE]') continue;
+
+      try {
+        final json = jsonDecode(raw) as Map<String, dynamic>;
+
+        if (json['done'] == true) {
+          yield null; // sinaliza conclusão
+          return;
+        }
+
+        final text = json['text'] as String?;
+        if (text != null && text.isNotEmpty) yield text;
+      } catch (_) {
+        // chunk SSE malformado — ignora
+      }
+    }
+  }
+
+  String _mensagemErroDio(DioException e) {
+    final data = e.response?.data;
+    if (data is String && data.isNotEmpty) {
+      try {
+        final json = jsonDecode(data) as Map<String, dynamic>;
+        final erro = json['erro'] as String?;
+        if (erro != null && erro.isNotEmpty) return erro;
+      } catch (_) {}
+    }
+    return 'Cadu não conseguiu responder. Tente novamente.';
   }
 }

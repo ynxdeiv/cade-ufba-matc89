@@ -11,6 +11,7 @@ export interface ChatTurn {
 
 export interface RequestBody {
   mensagem: string;
+  conversation_id: string;
   historico?: ChatTurn[];
 }
 

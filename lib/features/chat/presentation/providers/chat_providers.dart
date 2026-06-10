@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -9,16 +10,19 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/criar_conversa.dart';
-import '../../domain/usecases/enviar_mensagem.dart';
 import '../../domain/usecases/listar_conversas.dart';
 import '../../domain/usecases/listar_mensagens.dart';
+import '../../domain/usecases/streamar_mensagem.dart';
 
 // ------------------------------------------------------------------
 // Infra (datasource + repository + usecases)
 // ------------------------------------------------------------------
 
 final _remoteProvider = Provider<ChatRemoteDatasource>(
-  (_) => ChatRemoteDatasource(sb.Supabase.instance.client),
+  (_) => ChatRemoteDatasource(
+    sb.Supabase.instance.client,
+    Dio(),
+  ),
 );
 
 final chatRepositoryProvider = Provider<ChatRepository>(
@@ -37,8 +41,8 @@ final _listarMensagensProvider = Provider<ListarMensagens>(
   (ref) => ListarMensagens(ref.watch(chatRepositoryProvider)),
 );
 
-final _enviarMensagemProvider = Provider<EnviarMensagem>(
-  (ref) => EnviarMensagem(ref.watch(chatRepositoryProvider)),
+final _streamarMensagemProvider = Provider<StreamarMensagem>(
+  (ref) => StreamarMensagem(ref.watch(chatRepositoryProvider)),
 );
 
 // ------------------------------------------------------------------
@@ -91,7 +95,6 @@ class ConversasController extends StateNotifier<ConversasState> {
     );
   }
 
-  /// Cria uma conversa nova e retorna o id (para a tela navegar).
   Future<String?> criar() async {
     final r = await _criar(const NoParams());
     return r.fold(
@@ -108,8 +111,6 @@ class ConversasController extends StateNotifier<ConversasState> {
     );
   }
 
-  /// Sincroniza o `updatedAt` local quando uma mensagem foi enviada,
-  /// reordenando a lista (a conversa ativa sobe para o topo).
   void marcarAtividade(String conversationId) {
     final agora = DateTime.now();
     final atualizada = [
@@ -138,6 +139,7 @@ class ChatState {
     required this.carregando,
     required this.enviando,
     this.erro,
+    this.textoStreaming,
   });
 
   factory ChatState.inicial() => const ChatState(
@@ -151,28 +153,34 @@ class ChatState {
   final bool enviando;
   final Failure? erro;
 
+  /// Texto do assistente sendo recebido em streaming. `null` = não está streamando.
+  final String? textoStreaming;
+
   ChatState copyWith({
     List<ChatMessage>? mensagens,
     bool? carregando,
     bool? enviando,
     Failure? erro,
     bool limparErro = false,
+    String? textoStreaming,
+    bool limparStreaming = false,
   }) {
     return ChatState(
       mensagens: mensagens ?? this.mensagens,
       carregando: carregando ?? this.carregando,
       enviando: enviando ?? this.enviando,
       erro: limparErro ? null : (erro ?? this.erro),
+      textoStreaming: limparStreaming ? null : (textoStreaming ?? this.textoStreaming),
     );
   }
 }
 
 class ChatController extends StateNotifier<ChatState> {
-  ChatController(this._listar, this._enviar, this._conversationId)
+  ChatController(this._listar, this._streamar, this._conversationId)
       : super(ChatState.inicial());
 
   final ListarMensagens _listar;
-  final EnviarMensagem _enviar;
+  final StreamarMensagem _streamar;
   final String _conversationId;
 
   Future<void> carregar() async {
@@ -188,24 +196,66 @@ class ChatController extends StateNotifier<ChatState> {
     final texto = conteudo.trim();
     if (texto.isEmpty) return false;
 
-    state = state.copyWith(enviando: true, limparErro: true);
-    final r = await _enviar(ParametrosEnviarMensagem(
+    // Adiciona mensagem do usuário otimisticamente
+    final userMsg = ChatMessage(
+      id: -1,
+      conversationId: _conversationId,
+      role: ChatRole.user,
+      conteudo: texto,
+      createdAt: DateTime.now(),
+    );
+
+    state = state.copyWith(
+      enviando: true,
+      limparErro: true,
+      mensagens: [...state.mensagens, userMsg],
+      textoStreaming: '',
+    );
+
+    String textoFinal = '';
+    bool sucesso = true;
+
+    await for (final either in _streamar(ParametrosStreamarMensagem(
       conversationId: _conversationId,
       conteudo: texto,
-    ));
-    return r.fold(
-      (f) {
-        state = state.copyWith(enviando: false, erro: f);
-        return false;
-      },
-      (novas) {
-        state = state.copyWith(
-          enviando: false,
-          mensagens: [...state.mensagens, ...novas],
-        );
-        return true;
-      },
+    ))) {
+      either.fold(
+        (f) {
+          state = state.copyWith(
+            enviando: false,
+            erro: f,
+            limparStreaming: true,
+            // Remove mensagem otimista em caso de erro
+            mensagens: state.mensagens
+                .where((m) => m.id != -1)
+                .toList(),
+          );
+          sucesso = false;
+        },
+        (chunk) {
+          textoFinal += chunk;
+          state = state.copyWith(textoStreaming: textoFinal);
+        },
+      );
+      if (!sucesso) return false;
+    }
+
+    // Streaming concluído — recarrega mensagens do banco (IDs reais)
+    final r = await _listar(_conversationId);
+    state = r.fold(
+      (f) => state.copyWith(
+        enviando: false,
+        limparStreaming: true,
+        erro: f,
+      ),
+      (lista) => state.copyWith(
+        enviando: false,
+        limparStreaming: true,
+        mensagens: lista,
+      ),
     );
+
+    return sucesso;
   }
 }
 
@@ -213,7 +263,7 @@ final chatControllerProvider = StateNotifierProvider.family<ChatController,
     ChatState, String>(
   (ref, conversationId) => ChatController(
     ref.watch(_listarMensagensProvider),
-    ref.watch(_enviarMensagemProvider),
+    ref.watch(_streamarMensagemProvider),
     conversationId,
   ),
 );
