@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -77,6 +78,94 @@ class ListaConversasDrawer extends ConsumerWidget {
                                 c.titulo,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.edit_outlined),
+                                tooltip: 'Renomear conversa',
+                                onPressed: () async {
+                                  final controller = TextEditingController(text: c.titulo);
+
+                                  try {
+                                    final novoTitulo = await showDialog<String>(
+                                      context: context,
+                                      builder: (dialogContext) {
+                                        return AlertDialog(
+                                          title: const Text('Renomear conversa'),
+                                          content: TextField(
+                                            controller: controller,
+                                            maxLength: 60,
+                                            autofocus: true,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Digite o novo título',
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(dialogContext).pop(),
+                                              child: const Text('Cancelar'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                final titulo = controller.text.trim();
+
+                                                if (titulo.isEmpty) {
+                                                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'O título não pode ficar vazio.',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+
+                                                if (titulo == c.titulo) {
+                                                  Navigator.of(dialogContext).pop();
+                                                  return;
+                                                }
+
+                                                Navigator.of(dialogContext).pop(titulo);
+                                              },
+                                              child: const Text('Salvar'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (novoTitulo == null) return;
+
+                                    await Supabase.instance.client
+                                        .from('chat_conversations')
+                                        .update({'titulo': novoTitulo})
+                                        .eq('id', c.id);
+
+                                    await ref
+                                        .read(conversasControllerProvider.notifier)
+                                        .carregar();
+
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Conversa renomeada com sucesso!'),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Erro ao renomear conversa: $e',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    controller.dispose();
+                                  }
+                                },
                               ),
                               onTap: () {
                                 Navigator.of(context).pop();
