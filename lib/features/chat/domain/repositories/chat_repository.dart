@@ -13,9 +13,9 @@ abstract class ChatRepository {
     String conversationId,
   );
 
-  /// Persiste a mensagem do usuário e a resposta stub do assistente em
-  /// `chat_messages`. Retorna ambas, já com `id` e `createdAt` do banco.
-  Future<Either<Failure, List<ChatMessage>>> enviarMensagem({
+  /// Envia a mensagem via edge function e retorna um stream de chunks de texto.
+  /// O último evento emite `done: true` indicando que o banco já foi atualizado.
+  Stream<Either<Failure, String>> streamarMensagem({
     required String conversationId,
     required String conteudo,
   });

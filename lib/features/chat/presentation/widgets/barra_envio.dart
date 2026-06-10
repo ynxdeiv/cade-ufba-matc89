@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../shared/theme/app_theme.dart';
 
 class BarraEnvio extends StatefulWidget {
-  const BarraEnvio({
-    super.key,
-    required this.onEnviar,
-    required this.enviando,
-  });
+  const BarraEnvio({super.key, required this.onEnviar, required this.enviando});
 
   final Future<bool> Function(String conteudo) onEnviar;
   final bool enviando;
@@ -37,6 +34,21 @@ class _BarraEnvioState extends State<BarraEnvio> {
     }
   }
 
+  /// Enter envia; Shift+Enter quebra linha. Vale para teclado físico
+  /// (web/desktop); no mobile o botão de enviar continua sendo o caminho.
+  KeyEventResult _aoTeclar(FocusNode node, KeyEvent event) {
+    final isEnter =
+        event.logicalKey == LogicalKeyboardKey.enter ||
+        event.logicalKey == LogicalKeyboardKey.numpadEnter;
+    if (event is KeyDownEvent &&
+        isEnter &&
+        !HardwareKeyboard.instance.isShiftPressed) {
+      _enviar();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -51,23 +63,26 @@ class _BarraEnvioState extends State<BarraEnvio> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-              child: TextField(
-                controller: _controller,
-                focusNode: _focus,
-                minLines: 1,
-                maxLines: 5,
-                textInputAction: TextInputAction.newline,
-                decoration: InputDecoration(
-                  hintText: 'Pergunte algo ao Cadu...',
-                  filled: true,
-                  fillColor: AppCores.neutro100,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(22),
-                    borderSide: BorderSide.none,
+              child: Focus(
+                onKeyEvent: _aoTeclar,
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focus,
+                  minLines: 1,
+                  maxLines: 5,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    hintText: 'Pergunte algo ao Cadu...',
+                    filled: true,
+                    fillColor: AppCores.neutro100,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),

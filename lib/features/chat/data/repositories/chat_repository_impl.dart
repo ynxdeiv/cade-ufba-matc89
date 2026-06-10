@@ -57,22 +57,27 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Either<Failure, List<ChatMessage>>> enviarMensagem({
+  Stream<Either<Failure, String>> streamarMensagem({
     required String conversationId,
     required String conteudo,
-  }) async {
+  }) async* {
     try {
-      final modelos = await _remote.enviarMensagem(
-        conversationId: conversationId,
-        conteudo: conteudo,
-      );
-      return Right(modelos.map((m) => m.toEntity()).toList(growable: false));
+      await for (final chunk
+          in _remote.streamarMensagem(
+            conversationId: conversationId,
+            conteudo: conteudo,
+          )) {
+        if (chunk == null) return; // done
+        yield Right(chunk);
+      }
     } on AuthException catch (e) {
-      return Left(AuthFailure(e.mensagem));
+      yield Left(AuthFailure(e.mensagem));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.mensagem));
+      yield Left(NetworkFailure(e.mensagem));
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.mensagem));
+      yield Left(ServerFailure(e.mensagem));
+    } catch (e) {
+      yield Left(ServerFailure(e.toString()));
     }
   }
 }

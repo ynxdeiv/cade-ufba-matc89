@@ -118,24 +118,39 @@ class _ConversaBody extends ConsumerWidget {
     final state = ref.watch(chatControllerProvider(conversaId));
 
     ref.listen(chatControllerProvider(conversaId), (prev, next) {
-      if ((prev?.mensagens.length ?? 0) != next.mensagens.length) {
+      final mensagensNovas =
+          (prev?.mensagens.length ?? 0) != next.mensagens.length;
+      final streamingAtualizado =
+          prev?.textoStreaming != next.textoStreaming &&
+          next.textoStreaming != null;
+      if (mensagensNovas || streamingAtualizado) {
         onMensagemEnviada();
       }
     });
+
+    final streamingAtivo = state.textoStreaming != null;
+    final totalItens = state.mensagens.length + (streamingAtivo ? 1 : 0);
 
     return Column(
       children: [
         Expanded(
           child: state.carregando && state.mensagens.isEmpty
               ? const Center(child: CircularProgressIndicator())
-              : state.mensagens.isEmpty
+              : totalItens == 0
                   ? const _ConversaVazia()
                   : ListView.builder(
                       controller: scroll,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      itemCount: state.mensagens.length,
-                      itemBuilder: (_, i) =>
-                          BolhaMensagem(mensagem: state.mensagens[i]),
+                      itemCount: totalItens,
+                      itemBuilder: (_, i) {
+                        if (i < state.mensagens.length) {
+                          return BolhaMensagem(mensagem: state.mensagens[i]);
+                        }
+                        // Bolha de streaming do assistente
+                        return BolhaStreaming(
+                          texto: state.textoStreaming ?? '',
+                        );
+                      },
                     ),
         ),
         BarraEnvio(
